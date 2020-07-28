@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using MessageBird.Objects.Voice;
 using MessageBird.Resources.Voice;
+using System.Threading.Tasks;
 
 namespace MessageBirdUnitTests.Resources
 {
@@ -12,7 +13,7 @@ namespace MessageBirdUnitTests.Resources
     {
         private string baseUrl = VoiceBaseResource<Webhook>.baseUrl;
         [TestMethod]
-        public void Create()
+        public async Task Create()
         {
             var restClient = MockRestClient
                 .ThatExpects("{\"url\":\"https://testing.com\",\"token\":\"example token\"}")
@@ -28,7 +29,7 @@ namespace MessageBirdUnitTests.Resources
                 token = "example token"
             };
 
-            var webhookResponse = client.CreateWebhook(newWebhook);
+            var webhookResponse = await client.CreateWebhook(newWebhook);
             restClient.Verify();
 
             Assert.IsNotNull(webhookResponse.Data);
@@ -46,7 +47,7 @@ namespace MessageBirdUnitTests.Resources
         }
 
         [TestMethod]
-        public void List()
+        public async Task List()
         {
             var restClient = MockRestClient
                 .ThatReturns(filename: "WebhooksList.json")
@@ -54,7 +55,7 @@ namespace MessageBirdUnitTests.Resources
                 .Get();
 
             var client = Client.Create(restClient.Object);
-            var webhookList = client.ListWebhooks();
+            var webhookList = await client.ListWebhooks();
             restClient.Verify();
 
             Assert.IsNotNull(webhookList.Data);
@@ -79,7 +80,7 @@ namespace MessageBirdUnitTests.Resources
         }
 
         [TestMethod]
-        public void View()
+        public async Task View()
         {
             var restClient = MockRestClient
                 .ThatReturns(filename: "WebhooksView.json")
@@ -87,7 +88,7 @@ namespace MessageBirdUnitTests.Resources
                 .Get();
 
             var client = Client.Create(restClient.Object);
-            var webhookResponse = client.ViewWebhook("dff95aec-c11f-423c-82f3-1f391d78d716");
+            var webhookResponse = await client.ViewWebhook("dff95aec-c11f-423c-82f3-1f391d78d716");
             restClient.Verify();
 
             Assert.IsNotNull(webhookResponse.Data);
@@ -105,7 +106,7 @@ namespace MessageBirdUnitTests.Resources
         }
 
         [TestMethod]
-        public void Update()
+        public async Task Update()
         {
             var restClient = MockRestClient
                 .ThatExpects("{\"url\":\"https://example.com/update\",\"token\":\"new token\"}")
@@ -121,7 +122,7 @@ namespace MessageBirdUnitTests.Resources
                 token = "new token"
             };
 
-            var webhookResponse = client.UpdateWebhook("dff95aec-c11f-423c-82f3-1f391d78d716", updateWebhook);
+            var webhookResponse = await client.UpdateWebhook("dff95aec-c11f-423c-82f3-1f391d78d716", updateWebhook);
             restClient.Verify();
 
             Assert.IsNotNull(webhookResponse.Data);

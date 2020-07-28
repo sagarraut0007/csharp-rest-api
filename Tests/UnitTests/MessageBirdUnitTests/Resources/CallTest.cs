@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using MessageBird.Objects.Voice;
 using MessageBird.Resources.Voice;
-
+using System.Threading.Tasks;
 
 namespace MessageBirdUnitTests.Resources
 {
@@ -13,7 +13,7 @@ namespace MessageBirdUnitTests.Resources
     {
         private string baseUrl = VoiceBaseResource<Call>.baseUrl;
         [TestMethod]
-        public void Create()
+        public async Task Create()
         {
             var restClient = MockRestClient
                 .ThatExpects("{\"source\":\"31644556677\",\"destination\":\"33766723144\",\"callFlow\":{\"title\":\"Forward call to 31612345678\",\"record\":true,\"steps\":[{\"action\":\"transfer\",\"options\":{\"destination\":\"31612345678\"}}]},\"duration\":0}")
@@ -35,7 +35,7 @@ namespace MessageBirdUnitTests.Resources
                 Destination = "33766723144",
                 CallFlow = newCallFlow
             };
-            var callResponse = client.CreateCall(newCall);
+            var callResponse = await client.CreateCall(newCall);
             restClient.Verify();
 
             Assert.IsNotNull(callResponse.Data);
@@ -45,7 +45,7 @@ namespace MessageBirdUnitTests.Resources
         }
 
         [TestMethod]
-        public void List()
+        public async Task List()
         {
             var restClient = MockRestClient
                 .ThatReturns(filename: "CallList.json")
@@ -54,7 +54,7 @@ namespace MessageBirdUnitTests.Resources
 
             var client = Client.Create(restClient.Object);
 
-            var callList = client.ListCalls();
+            var callList = await client.ListCalls();
             restClient.Verify();
 
             Assert.IsNotNull(callList.Data);
@@ -85,7 +85,7 @@ namespace MessageBirdUnitTests.Resources
         }
 
         [TestMethod]
-        public void View()
+        public async Task View()
         {
             var restClient = MockRestClient
                 .ThatReturns(filename: "CallView.json")
@@ -94,7 +94,7 @@ namespace MessageBirdUnitTests.Resources
 
             var client = Client.Create(restClient.Object);
 
-            var callResponse = client.ViewCall("f1aa71c0-8f2a-4fe8-b5ef-9a330454ef58");
+            var callResponse = await client.ViewCall("f1aa71c0-8f2a-4fe8-b5ef-9a330454ef58");
             restClient.Verify();
 
             Assert.IsNotNull(callResponse.Data);

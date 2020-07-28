@@ -1,6 +1,7 @@
 ﻿using MessageBird;
 using MessageBird.Objects;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using System.Threading.Tasks;
 
 namespace MessageBirdUnitTests.Resources
 {
@@ -8,7 +9,7 @@ namespace MessageBirdUnitTests.Resources
     public class ContactTest
     {
         [TestMethod]
-        public void Create()
+        public async Task Create()
         {
             var restClient = MockRestClient
                 .ThatExpects("{\"msisdn\":31612345678,\"firstName\":\"Foo\",\"lastName\":\"Bar\",\"custom1\":\"First\",\"custom2\":\"Second\"}")
@@ -24,7 +25,7 @@ namespace MessageBirdUnitTests.Resources
                 Custom1 = "First",
                 Custom2 = "Second",
             };
-            var contact = client.CreateContact(31612345678L, optionalArguments);
+            var contact = await client.CreateContact(31612345678L, optionalArguments);
             restClient.Verify();
 
             Assert.AreEqual(31612345678L, contact.Msisdn);
@@ -45,7 +46,7 @@ namespace MessageBirdUnitTests.Resources
         }
 
         [TestMethod]
-        public void List()
+        public async Task List()
         {
             var restClient = MockRestClient
                 .ThatReturns("{\"offset\": 0,\"limit\": 20,\"count\": 2,\"totalCount\": 2,\"links\": {\"first\": \"https://rest.messagebird.com/contacts?offset=0\",\"previous\": null,\"next\": null,\"last\": \"https://rest.messagebird.com/contacts?offset=0\"},\"items\": [{\"id\": \"first-id\",\"href\": \"https://rest.messagebird.com/contacts/first-id\",\"msisdn\": 31612345678,\"firstName\": \"Foo\",\"lastName\": \"Bar\",\"customDetails\": {\"custom1\": null,\"custom2\": null,\"custom3\": null,\"custom4\": null},\"groups\": {\"totalCount\": 0,\"href\": \"https://rest.messagebird.com/contacts/first-id/groups\"},\"messages\": {\"totalCount\": 0,\"href\": \"https://rest.messagebird.com/contacts/first-id/messages\"},\"createdDatetime\": \"2018-07-13T10:34:08+00:00\",\"updatedDatetime\": \"2018-07-13T10:34:08+00:00\"},{\"id\": \"second-id\",\"href\": \"https://rest.messagebird.com/contacts/second-id\",\"msisdn\": 49612345678,\"firstName\": \"Hello\",\"lastName\": \"World\",\"customDetails\": {\"custom1\": null,\"custom2\": null,\"custom3\": null,\"custom4\": null},\"groups\": {\"totalCount\": 0,\"href\": \"https://rest.messagebird.com/contacts/second-id/groups\"},\"messages\": {\"totalCount\": 0,\"href\": \"https://rest.messagebird.com/contacts/second-id/messages\"},\"createdDatetime\": \"2018-07-13T10:33:52+00:00\",\"updatedDatetime\": null}]}")
@@ -53,7 +54,7 @@ namespace MessageBirdUnitTests.Resources
                 .Get();
             var client = Client.Create(restClient.Object);
 
-            var contactList = client.ListContacts();
+            var contactList = await client.ListContacts();
             restClient.Verify();
 
             Assert.AreEqual(2, contactList.Count);
@@ -76,7 +77,7 @@ namespace MessageBirdUnitTests.Resources
         }
 
         [TestMethod]
-        public void View()
+        public async Task View()
         {
             var restClient = MockRestClient
                 .ThatReturns("{\"id\": \"contact-id\",\"href\": \"https://rest.messagebird.com/contacts/contact-id\",\"msisdn\": 31612345678,\"firstName\": \"Foo\",\"lastName\": \"Bar\",\"customDetails\": {\"custom1\": \"First\",\"custom2\": \"Second\",\"custom3\": \"Third\",\"custom4\": \"Fourth\"},\"groups\": {\"totalCount\": 3,\"href\": \"https://rest.messagebird.com/contacts/contact-id/groups\"},\"messages\": {\"totalCount\": 5,\"href\": \"https://rest.messagebird.com/contacts/contact-id/messages\"},\"createdDatetime\": \"2018-07-13T10:34:08+00:00\",\"updatedDatetime\": \"2018-07-13T10:44:08+00:00\"}")
@@ -84,7 +85,7 @@ namespace MessageBirdUnitTests.Resources
                 .Get();
             var client = Client.Create(restClient.Object);
 
-            var contact = client.ViewContact("contact-id");
+            var contact = await client.ViewContact("contact-id");
             restClient.Verify();
 
             Assert.AreEqual("contact-id", contact.Id);

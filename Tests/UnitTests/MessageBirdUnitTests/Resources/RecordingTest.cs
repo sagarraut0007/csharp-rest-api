@@ -4,6 +4,7 @@ using MessageBird;
 using MessageBird.Resources.Voice;
 using MessageBird.Objects.Voice;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using System.Threading.Tasks;
 
 namespace MessageBirdUnitTests.Resources
 {
@@ -12,7 +13,7 @@ namespace MessageBirdUnitTests.Resources
     {
         private string baseUrl = VoiceBaseResource<Recording>.baseUrl;  
         [TestMethod]
-        public void List()
+        public async Task List()
         {
             var restClient = MockRestClient
                 .ThatReturns(filename: "RecordingList.json")
@@ -22,7 +23,7 @@ namespace MessageBirdUnitTests.Resources
             var client = Client.Create(restClient.Object);
             var callId = "fdcf0391-4fdc-4e38-9551-e8a01602984f";
             var legId = "317bd14d-3eee-4380-b01f-fe7723c6913a";
-            var recordingList = client.ListRecordings(callId: callId, legId: legId, limit: 5, page: 2);
+            var recordingList = await client.ListRecordings(callId: callId, legId: legId, limit: 5, page: 2);
             restClient.Verify();
 
             Assert.IsNotNull(recordingList.Data);
@@ -57,7 +58,7 @@ namespace MessageBirdUnitTests.Resources
         }
 
         [TestMethod]
-        public void View()
+        public async Task View()
         {
             var restClient = MockRestClient
                 .ThatReturns(filename: "RecordingView.json")
@@ -66,7 +67,7 @@ namespace MessageBirdUnitTests.Resources
 
             var client = Client.Create(restClient.Object);
 
-            var recordingResponse = client.ViewRecording("bb3f0391-4fdc-4e38-9551-e8a01602984f", "cc3bd14d-3eee-4380-b01f-fe7723c69a31", "3b4ac358-9467-4f7a-a6c8-6157ad181123");
+            var recordingResponse = await client.ViewRecording("bb3f0391-4fdc-4e38-9551-e8a01602984f", "cc3bd14d-3eee-4380-b01f-fe7723c69a31", "3b4ac358-9467-4f7a-a6c8-6157ad181123");
             restClient.Verify();
 
             Assert.IsNotNull(recordingResponse.Data);

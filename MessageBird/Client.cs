@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Threading.Tasks;
 using MessageBird.Net;
 using MessageBird.Net.ProxyConfigurationInjector;
 using MessageBird.Objects;
@@ -49,7 +50,7 @@ namespace MessageBird
 
         #region Programmable SMS API
 
-        public Message SendMessage(string originator, string body, long[] msisdns, MessageOptionalArguments optionalArguments = null)
+        public async Task<Message> SendMessage(string originator, string body, long[] msisdns, MessageOptionalArguments optionalArguments = null)
         {
             ParameterValidator.IsNotNullOrWhiteSpace(originator, "originator");
             ParameterValidator.IsNotNullOrWhiteSpace(body, "body");
@@ -64,27 +65,26 @@ namespace MessageBird
             var message = new Message(originator, body, recipients, optionalArguments);
 
             var messages = new Messages(message);
-            var result = restClient.Create(messages);
+            var result = await restClient.Create(messages);
 
             return result.Object as Message;
         }
 
-        public Message ViewMessage(string id)
+        public async Task<Message> ViewMessage(string id)
         {
             ParameterValidator.IsNotNullOrWhiteSpace(id, "id");
 
             var messageToView = new Messages(new Message(id));
-            var result = restClient.Retrieve(messageToView);
+            var result = await restClient.Retrieve(messageToView);
 
             return result.Object as Message;
         }
 
-        public MessageList ListMessages(string status = "", int limit = 20, int offset = 0)
+        public async Task<MessageList> ListMessages(string status = "", long recipient=0, DateTime? from=null, DateTime? until=null, int limit = 20, int offset = 0)
         {
             var messageLists = new MessageLists();
-            var messageList = new MessageLists(new MessageList { Limit = limit, Offset = offset, Status = status });
-            
-            restClient.Retrieve(messageList);
+            var messageList = new MessageLists(new MessageList { Limit = limit, Offset = offset, Status = status, Recipient=recipient,From=from,Until=until });
+            await restClient.Retrieve(messageList);
             return messageList.Object as MessageList;
         }
 
@@ -98,11 +98,11 @@ namespace MessageBird
         /// <param name="limit">Set how many records will return from the server</param>
         /// <param name="page">Identify the starting point to return rows from a result</param>
         /// <returns>If successful, this request will return an object with a data, _links and pagination properties.</returns>
-        public CallFlowList ListCallFlows(int limit = 20, int page = 0)
+        public async Task<CallFlowList> ListCallFlows(int limit = 20, int page = 0)
         {
             var resource = new CallFlowLists(new CallFlowList { Limit = limit, Page = page });
 
-            var result = restClient.Retrieve(resource);
+            var result = await restClient.Retrieve(resource);
 
             return (CallFlowList)result.Object;
         }
@@ -113,12 +113,12 @@ namespace MessageBird
         /// </summary>
         /// <param name="id">The unique ID which was returned upon creation of a call flow.</param>
         /// <returns></returns>
-        public VoiceResponse<CallFlow> ViewCallFlow(string id)
+        public async Task<VoiceResponse<CallFlow>> ViewCallFlow(string id)
         {
             ParameterValidator.IsNotNullOrWhiteSpace(id, "id");
 
             var resource = new CallFlows(new CallFlow() { Id = id });
-            var result = restClient.Retrieve(resource);
+            var result = await restClient.Retrieve(resource);
 
             return (VoiceResponse<CallFlow>)result.Object;
         }
@@ -128,13 +128,13 @@ namespace MessageBird
         /// </summary>
         /// <param name="request"></param>
         /// <returns>If successful, this request will return an object with a data property, which is an array that has a single call flow object. If the request failed, an error object will be returned.</returns>
-        public VoiceResponse<CallFlow> CreateCallFlow(CallFlow request)
+        public async Task<VoiceResponse<CallFlow>> CreateCallFlow(CallFlow request)
         {
             ParameterValidator.IsNotNullOrWhiteSpace(request.Title, "title");
             ParameterValidator.IsNotNull(request.Steps, "steps");
 
             var callFlows = new CallFlows(new CallFlow { Title = request.Title, Steps = request.Steps, Record = request.Record });
-            var result = restClient.Create(callFlows);
+            var result = await restClient.Create(callFlows);
 
             return (VoiceResponse<CallFlow>)result.Object;
         }
@@ -160,13 +160,13 @@ namespace MessageBird
         /// <param name="id">The unique ID which was returned upon creation of a call flow.</param>
         /// <param name="callFlow"></param>
         /// <returns></returns>
-        public VoiceResponse<CallFlow> UpdateCallFlow(string id, CallFlow callFlow)
+        public async Task<VoiceResponse<CallFlow>> UpdateCallFlow(string id, CallFlow callFlow)
         {
             ParameterValidator.IsNotNullOrWhiteSpace(callFlow.Title, "title");
             ParameterValidator.IsNotNull(callFlow.Steps, "steps");
 
             var callFlows = new CallFlows(new CallFlow { Id = id, Title = callFlow.Title, Steps = callFlow.Steps, Record = callFlow.Record });
-            var result = restClient.Update(callFlows);
+            var result = await restClient.Update(callFlows);
 
             return (VoiceResponse<CallFlow>)result.Object;
         }
@@ -177,14 +177,14 @@ namespace MessageBird
         /// </summary>
         /// <param name="request"></param>
         /// <returns></returns>
-        public VoiceResponse<Call> CreateCall(Call request)
+        public async Task<VoiceResponse<Call>> CreateCall(Call request)
         {
             ParameterValidator.IsNotNullOrWhiteSpace(request.Source, "source");
             ParameterValidator.IsNotNullOrWhiteSpace(request.Destination, "destination");
             ParameterValidator.IsNotNull(request.CallFlow, "callFlow");
 
             var callResource = new Calls(request);
-            var result = restClient.Create(callResource);
+            var result = await restClient.Create(callResource);
 
 
             return (VoiceResponse<Call>)result.Object;
@@ -198,19 +198,19 @@ namespace MessageBird
         /// <param name="limit">Set how many records will return from the server</param>
         /// <param name="page">Identify the starting point to return rows from a result</param>
         /// <returns>If successful, this request will return an object with a data, _links and pagination properties.</returns>
-        public CallList ListCalls(int limit = 20, int page = 0)
+        public async Task<CallList> ListCalls(int limit = 20, int page = 0)
         {
             var resource = new CallLists(new CallList { Limit = limit, Page = page });
-            var result = restClient.Retrieve(resource);
+            var result = await restClient.Retrieve(resource);
             return (CallList)result.Object;
         }
 
-        public VoiceResponse<Call> ViewCall(string callId)
+        public async Task<VoiceResponse<Call>> ViewCall(string callId)
         {
             ParameterValidator.IsNotNullOrWhiteSpace(callId, "callId");
 
             var resource = new Calls(new Call { Id = callId });
-            var result = restClient.Retrieve(resource);
+            var result = await restClient.Retrieve(resource);
 
             return (VoiceResponse<Call>)result.Object;
         }
@@ -236,12 +236,12 @@ namespace MessageBird
         /// <param name="limit">Set how many records will return from the server</param>
         /// <param name="page">Identify the starting point to return rows from a result</param>
         /// <returns>If successful, this request will return an object with a data, _links and pagination properties.</returns>
-        public RecordingList ListRecordings(string callId, string legId, int limit = 20, int page = 0)
+        public async Task<RecordingList> ListRecordings(string callId, string legId, int limit = 20, int page = 0)
         {
             ParameterValidator.IsNotNullOrWhiteSpace(callId, "callId");
             ParameterValidator.IsNotNullOrWhiteSpace(legId, "legId");
             var resource = new RecordingLists(new RecordingList { Limit = limit, Page = page, CallId = callId, LegId = legId });
-            var result = restClient.Retrieve(resource);
+            var result = await restClient.Retrieve(resource);
 
             return (RecordingList)result.Object;
         }
@@ -255,14 +255,14 @@ namespace MessageBird
         /// <param name="legId">The unique ID of a leg generated upon creation.</param>
         /// <param name="recordingId">The unique ID of a recording generated upon creation.</param>
         /// <returns>VoiceResponse -Recording-</returns>
-        public VoiceResponse<Recording> ViewRecording(string callId, string legId, string recordingId)
+        public async Task<VoiceResponse<Recording>> ViewRecording(string callId, string legId, string recordingId)
         {
             ParameterValidator.IsNotNullOrWhiteSpace(callId, "callId");
             ParameterValidator.IsNotNullOrWhiteSpace(legId, "legId");
             ParameterValidator.IsNotNullOrWhiteSpace(recordingId, "recordingId");
 
             var resource = new Recordings(new Recording { CallId = callId, LegId = legId, Id = recordingId });
-            var result = restClient.Retrieve(resource);
+            var result = await restClient.Retrieve(resource);
 
             return (VoiceResponse<Recording>)result.Object;
         }
@@ -312,7 +312,7 @@ namespace MessageBird
         /// <param name="recordingId">The unique ID of a recording generated upon creation.</param>
         /// <param name="language">The language of the recording that is to be transcribed.</param>
         /// <returns>If successful, this request will return an object with a data property, which is an array that has a single transcription object. If the request failed, an error object will be returned.</returns>
-        public VoiceResponse<Transcription> CreateTranscription(string callId, string legId, string recordingId, string language)
+        public async Task<VoiceResponse<Transcription>> CreateTranscription(string callId, string legId, string recordingId, string language)
         {
             ParameterValidator.IsNotNullOrWhiteSpace(callId, "callId");
             ParameterValidator.IsNotNullOrWhiteSpace(legId, "legId");
@@ -320,7 +320,7 @@ namespace MessageBird
             ParameterValidator.IsNotNullOrWhiteSpace(language, "language");
 
             var resource = new Transcriptions(new Transcription { CallId = callId, LegId = legId, RecordingId = recordingId, Language = language });
-            var result = restClient.Create(resource);
+            var result = await restClient.Create(resource);
 
             return (VoiceResponse<Transcription>)result.Object;
         }
@@ -335,14 +335,14 @@ namespace MessageBird
         /// <param name="limit">Set how many records will return from the server</param>
         /// <param name="page">Identify the starting point to return rows from a result</param>
         /// <returns>If successful, this request will return an object with a data, _links and pagination properties.</returns>
-        public TranscriptionList ListTranscriptions(string callId, string legId, string recordingId, int limit = 20, int page = 0)
+        public async Task<TranscriptionList> ListTranscriptions(string callId, string legId, string recordingId, int limit = 20, int page = 0)
         {
             ParameterValidator.IsNotNullOrWhiteSpace(callId, "callId");
             ParameterValidator.IsNotNullOrWhiteSpace(legId, "legId");
             ParameterValidator.IsNotNullOrWhiteSpace(recordingId, "recordingId");
 
             var resource = new TranscriptionsLists(new TranscriptionList { Limit = limit, Page = page, CallId = callId, LegId = legId, RecordingId = recordingId });
-            var result = restClient.Retrieve(resource);
+            var result = await restClient.Retrieve(resource);
 
             return (TranscriptionList)result.Object;
         }
@@ -357,7 +357,7 @@ namespace MessageBird
         /// <param name="recordingId">The unique ID of a recording generated upon creation.</param>
         /// /// <param name="transcriptionId">The unique ID of a transcription generated upon creation.</param>
         /// <returns>VoiceResponse -Recording-</returns>
-        public VoiceResponse<Transcription> ViewTranscription(string callId, string legId, string recordingId, string transcriptionId)
+        public async Task<VoiceResponse<Transcription>> ViewTranscription(string callId, string legId, string recordingId, string transcriptionId)
         {
             ParameterValidator.IsNotNullOrWhiteSpace(callId, "callId");
             ParameterValidator.IsNotNullOrWhiteSpace(legId, "legId");
@@ -365,7 +365,7 @@ namespace MessageBird
             ParameterValidator.IsNotNullOrWhiteSpace(transcriptionId, "transcriptionId");
 
             var resource = new Transcriptions(new Transcription { CallId = callId, LegId = legId, RecordingId = recordingId, Id = transcriptionId });
-            var result = restClient.Retrieve(resource);
+            var result = await restClient.Retrieve(resource);
 
             return (VoiceResponse<Transcription>)result.Object;
         }
@@ -396,10 +396,10 @@ namespace MessageBird
         /// <param name="limit">Set how many records will return from the server</param>
         /// <param name="page">Identify the starting point to return rows from a result</param>
         /// <returns>If successful, this request will return an object with a data, _links and pagination properties.</returns>
-        public WebhookList ListWebhooks(int limit = 20, int page = 0)
+        public async Task<WebhookList> ListWebhooks(int limit = 20, int page = 0)
         {
             var resource = new WebhookLists(new WebhookList { Limit = limit, Page = page });
-            var result = restClient.Retrieve(resource);
+            var result = await restClient.Retrieve(resource);
             return (WebhookList)result.Object;
         }
 
@@ -408,12 +408,12 @@ namespace MessageBird
         /// </summary>
         /// <param name="request"></param>
         /// <returns></returns>
-        public VoiceResponse<Webhook> CreateWebhook(Webhook request)
+        public async Task<VoiceResponse<Webhook>> CreateWebhook(Webhook request)
         {
             ParameterValidator.IsNotNullOrWhiteSpace(request.url, "url");
 
             var webhookResource = new Webhooks(request);
-            var result = restClient.Create(webhookResource);
+            var result = await restClient.Create(webhookResource);
 
             return (VoiceResponse<Webhook>)result.Object;
         }
@@ -423,12 +423,12 @@ namespace MessageBird
         /// </summary>
         /// <param name="webhookId"></param>Unique identifier of the webhook
         /// <returns></returns>
-        public VoiceResponse<Webhook> ViewWebhook(string webhookId)
+        public async Task<VoiceResponse<Webhook>> ViewWebhook(string webhookId)
         {
             ParameterValidator.IsNotNullOrWhiteSpace(webhookId, "webhookId");
 
             var resource = new Webhooks(new Webhook { Id = webhookId });
-            var result = restClient.Retrieve(resource);
+            var result = await restClient.Retrieve(resource);
 
             return (VoiceResponse<Webhook>)result.Object;
         }
@@ -440,12 +440,12 @@ namespace MessageBird
         /// <param name="id">The unique ID which was returned upon creation of a webhook.</param>
         /// <param name="webhook"></param>
         /// <returns></returns>
-        public VoiceResponse<Webhook> UpdateWebhook(string id, Webhook webhook)
+        public async Task<VoiceResponse<Webhook>> UpdateWebhook(string id, Webhook webhook)
         {
             ParameterValidator.IsNotNullOrWhiteSpace(id, "id");
 
             var resource = new Webhooks(new Webhook { Id = id, url = webhook.url, token = webhook.token });
-            var result = restClient.Update(resource);
+            var result = await restClient.Update(resource);
 
             return (VoiceResponse<Webhook>)result.Object;
         }
@@ -468,7 +468,7 @@ namespace MessageBird
 
         #region Voice Messaging API
 
-        public VoiceMessage SendVoiceMessage(string body, long[] msisdns, VoiceMessageOptionalArguments optionalArguments = null)
+        public async Task<VoiceMessage> SendVoiceMessage(string body, long[] msisdns, VoiceMessageOptionalArguments optionalArguments = null)
         {
             ParameterValidator.IsNotNullOrWhiteSpace(body, "body");
             ParameterValidator.ContainsAtLeast(msisdns, 1, "msisdns");
@@ -476,17 +476,17 @@ namespace MessageBird
             var recipients = new Recipients(msisdns);
             var voiceMessage = new VoiceMessage(body, recipients, optionalArguments);
             var voiceMessages = new VoiceMessages(voiceMessage);
-            var result = restClient.Create(voiceMessages);
+            var result = await restClient.Create(voiceMessages);
 
             return result.Object as VoiceMessage;
         }
 
-        public VoiceMessage ViewVoiceMessage(string id)
+        public async Task<VoiceMessage> ViewVoiceMessage(string id)
         {
             ParameterValidator.IsNotNullOrWhiteSpace(id, "id");
 
             var voiceMessageToView = new VoiceMessages(new VoiceMessage(id));
-            var result = restClient.Retrieve(voiceMessageToView);
+            var result = await restClient.Retrieve(voiceMessageToView);
 
             return result.Object as VoiceMessage;
         }
@@ -498,12 +498,12 @@ namespace MessageBird
         /// <param name="limit">Set how many records will return from the server</param>
         /// <param name="offset">Identify the starting point to return rows from a result</param>
         /// <returns>If successful, this request will return an object with a data, _links and pagination properties.</returns>
-        public VoiceMessageList ListVoiceMessages(int limit = 20, int offset = 0)
+        public async Task<VoiceMessageList> ListVoiceMessages(int limit = 20, int offset = 0)
         {
             var voiceMessageLists = new VoiceMessageLists();
             var voiceMessageList = new VoiceMessageLists(new VoiceMessageList { Limit = limit, Offset = offset });
             
-            restClient.Retrieve(voiceMessageList);
+            await restClient.Retrieve(voiceMessageList);
             return voiceMessageList.Object as VoiceMessageList;
         }
 
@@ -511,31 +511,31 @@ namespace MessageBird
 
         #region Verify API
 
-        public Objects.Verify SendVerifyToken(string id, string token)
+        public async Task<Objects.Verify> SendVerifyToken(string id, string token)
         {
             ParameterValidator.IsNotNullOrWhiteSpace(id, "id");
             ParameterValidator.IsNotNullOrWhiteSpace(token, "token");
 
             var verify = new Objects.Verify(id, token);
             var verifyResource = new Resources.Verify(verify);
-            var result = restClient.Retrieve(verifyResource);
+            var result = await restClient.Retrieve(verifyResource);
 
             return result.Object as Objects.Verify;
         }
 
         // Alias for the old constructor so that it remains backwards compatible
-        public Objects.Verify CreateVerify(string recipient, VerifyOptionalArguments arguments = null)
+        public async Task<Objects.Verify> CreateVerify(string recipient, VerifyOptionalArguments arguments = null)
         {
             ParameterValidator.IsNotNullOrWhiteSpace(recipient, "recipient");
 
-            return CreateVerify(Convert.ToInt64(recipient), arguments);
+            return await CreateVerify(Convert.ToInt64(recipient), arguments);
         }
 
-        public Objects.Verify CreateVerify(long recipient, VerifyOptionalArguments arguments = null)
+        public async Task<Objects.Verify> CreateVerify(long recipient, VerifyOptionalArguments arguments = null)
         {
             var verify = new Objects.Verify(recipient, arguments);
             var verifyResource = new Resources.Verify(verify);
-            var result = restClient.Create(verifyResource);
+            var result = await restClient.Create(verifyResource);
 
             return result.Object as Objects.Verify;
         }
@@ -550,13 +550,13 @@ namespace MessageBird
             restClient.Delete(verifyResource);
         }
 
-        public Objects.Verify ViewVerify(string id)
+        public async Task<Objects.Verify> ViewVerify(string id)
         {
             ParameterValidator.IsNotNullOrWhiteSpace(id, "id");
 
             var verify = new Objects.Verify(id);
             var verifyResource = new Resources.Verify(verify);
-            var result = restClient.Retrieve(verifyResource);
+            var result = await restClient.Retrieve(verifyResource);
 
             return result.Object as Objects.Verify;
         }
@@ -565,22 +565,22 @@ namespace MessageBird
 
         #region HLR API
 
-        public Objects.Hlr RequestHlr(long msisdn, string reference)
+        public async Task<Objects.Hlr> RequestHlr(long msisdn, string reference)
         {
             ParameterValidator.IsNotNullOrWhiteSpace(reference, "reference");
 
             var hlrToRequest = new Resources.Hlr(new Objects.Hlr(msisdn, reference));
-            var result = restClient.Create(hlrToRequest);
+            var result = await restClient.Create(hlrToRequest);
 
             return result.Object as Objects.Hlr;
         }
 
-        public Objects.Hlr ViewHlr(string id)
+        public async Task<Objects.Hlr> ViewHlr(string id)
         {
             ParameterValidator.IsNotNullOrWhiteSpace(id, "id");
 
             var hlrToView = new Resources.Hlr(new Objects.Hlr(id));
-            var result = restClient.Retrieve(hlrToView);
+            var result = await restClient.Retrieve(hlrToView);
 
             return result.Object as Objects.Hlr;
         }
@@ -589,10 +589,10 @@ namespace MessageBird
 
         #region Balance API
 
-        public Objects.Balance Balance()
+        public async Task<Objects.Balance> Balance()
         {
             var balance = new Resources.Balance();
-            var result = restClient.Retrieve(balance);
+            var result = await restClient.Retrieve(balance);
 
             return result.Object as Objects.Balance;
         }
@@ -601,28 +601,28 @@ namespace MessageBird
 
         #region Lookup API
 
-        public Objects.Lookup ViewLookup(long phonenumber, LookupOptionalArguments optionalArguments = null)
+        public async Task<Objects.Lookup> ViewLookup(long phonenumber, LookupOptionalArguments optionalArguments = null)
         {
             var lookup = new Resources.Lookup(new Objects.Lookup(phonenumber, optionalArguments));
-            var result = restClient.Retrieve(lookup);
+            var result = await restClient.Retrieve(lookup);
 
             return result.Object as Objects.Lookup;
         }
 
-        public Objects.LookupHlr RequestLookupHlr(long phonenumber, string reference, LookupHlrOptionalArguments optionalArguments = null)
+        public async Task<Objects.LookupHlr> RequestLookupHlr(long phonenumber, string reference, LookupHlrOptionalArguments optionalArguments = null)
         {
             ParameterValidator.IsNotNullOrWhiteSpace(reference, "reference");
 
             var lookupHlr = new Resources.LookupHlr(new Objects.LookupHlr(phonenumber, reference, optionalArguments));
-            var result = restClient.Create(lookupHlr);
+            var result =await restClient.Create(lookupHlr);
 
             return result.Object as Objects.LookupHlr;
         }
 
-        public Objects.LookupHlr ViewLookupHlr(long phonenumber, LookupHlrOptionalArguments optionalArguments = null)
+        public async Task<Objects.LookupHlr> ViewLookupHlr(long phonenumber, LookupHlrOptionalArguments optionalArguments = null)
         {
             var lookupHlr = new Resources.LookupHlr(new Objects.LookupHlr(phonenumber, optionalArguments));
-            var result = restClient.Retrieve(lookupHlr);
+            var result = await restClient.Retrieve(lookupHlr);
 
             return result.Object as Objects.LookupHlr;
         }
@@ -631,7 +631,7 @@ namespace MessageBird
 
         #region Contacts API
 
-        public Contact CreateContact(long msisdn, ContactOptionalArguments optionalArguments = null)
+        public async Task<Contact> CreateContact(long msisdn, ContactOptionalArguments optionalArguments = null)
         {
             var contact = new Contact { Msisdn = msisdn };
             if (optionalArguments != null)
@@ -647,7 +647,7 @@ namespace MessageBird
                 };
             }
 
-            var result = restClient.Create(new Contacts(contact));
+            var result = await restClient.Create(new Contacts(contact));
 
             return result.Object as Contact;
         }
@@ -657,7 +657,7 @@ namespace MessageBird
             restClient.Delete(new Contacts(new Contact { Id = id }));
         }
 
-        public ContactList ListContacts(int limit = 20, int offset = 0)
+        public async Task<ContactList> ListContacts(int limit = 20, int offset = 0)
         {
             var contactLists = new ContactLists();
 
@@ -665,17 +665,17 @@ namespace MessageBird
             contactList.Limit = limit;
             contactList.Offset = offset;
 
-            restClient.Retrieve(contactLists);
+            await restClient.Retrieve(contactLists);
 
             return contactLists.Object as ContactList;
         }
 
-        public Contact ViewContact(string id)
+        public async Task<Contact> ViewContact(string id)
         {
             ParameterValidator.IsNotNullOrWhiteSpace(id, "id");
 
             var contacts = new Contacts(new Contact { Id = id });
-            restClient.Retrieve(contacts);
+            await restClient.Retrieve(contacts);
 
             return contacts.Object as Contact;
         }
@@ -709,12 +709,12 @@ namespace MessageBird
 
         #region Groups API
 
-        public Group CreateGroup(string name)
+        public async Task<Group> CreateGroup(string name)
         {
             ParameterValidator.IsNotNullOrWhiteSpace(name, "name");
 
             var groups = new Groups(new Group { Name = name });
-            var result = restClient.Create(groups);
+            var result = await restClient.Create(groups);
 
             return result.Object as Group;
         }
@@ -728,7 +728,7 @@ namespace MessageBird
             restClient.Delete(groups);
         }
 
-        public GroupList ListGroups(int limit = 20, int offset = 0)
+        public async Task<GroupList> ListGroups(int limit = 20, int offset = 0)
         {
             var groupLists = new GroupLists();
 
@@ -736,7 +736,7 @@ namespace MessageBird
             groupList.Limit = limit;
             groupList.Offset = offset;
 
-            restClient.Retrieve(groupLists);
+            await restClient.Retrieve(groupLists);
 
             return groupLists.Object as GroupList;
         }
@@ -756,12 +756,12 @@ namespace MessageBird
             return groups.Object as Group;
         }
 
-        public Group ViewGroup(string id)
+        public async Task<Group> ViewGroup(string id)
         {
             ParameterValidator.IsNotNullOrWhiteSpace(id, "id");
 
             var groups = new Groups(new Group { Id = id });
-            restClient.Retrieve(groups);
+            await restClient.Retrieve(groups);
 
             return groups.Object as Group;
         }

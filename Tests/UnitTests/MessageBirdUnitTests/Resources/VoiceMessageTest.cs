@@ -4,6 +4,7 @@ using MessageBird;
 using MessageBird.Objects;
 using MessageBird.Resources;
 using Newtonsoft.Json;
+using System.Threading.Tasks;
 
 namespace MessageBirdUnitTests.Resources
 {
@@ -11,7 +12,7 @@ namespace MessageBirdUnitTests.Resources
     public class VoiceMessageTest
     {
         [TestMethod]
-        public void ListVoiceMessages()
+        public async Task ListVoiceMessages()
         {
             var restClient = MockRestClient
                 .ThatReturns(filename: "ListVoiceMessages.json")
@@ -19,7 +20,7 @@ namespace MessageBirdUnitTests.Resources
                 .Get();
             var client = Client.Create(restClient.Object);
 
-            var voicemessages = client.ListVoiceMessages();
+            var voicemessages = await client.ListVoiceMessages();
             restClient.Verify();
 
             Assert.AreEqual(2, voicemessages.Items.Count);

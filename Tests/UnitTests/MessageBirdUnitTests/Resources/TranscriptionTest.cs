@@ -4,6 +4,7 @@ using MessageBird;
 using MessageBird.Resources.Voice;
 using MessageBird.Objects.Voice;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using System.Threading.Tasks;
 
 namespace MessageBirdUnitTests.Resources
 {
@@ -13,7 +14,7 @@ namespace MessageBirdUnitTests.Resources
         private readonly string baseUrl = VoiceBaseResource<Transcription>.baseUrl;
 
         [TestMethod]
-        public void Create()
+        public async Task Create()
         {
             var restClient = MockRestClient
                 .ThatExpects("{\"Language\":\"en-EN\"}")
@@ -22,7 +23,7 @@ namespace MessageBirdUnitTests.Resources
                 .Get();
 
             var client = Client.Create(restClient.Object);
-            var transcriptionResponse = client.CreateTranscription("373395cc-382b-4a33-b372-cc31f0fdf242", "8dd347a4-11ee-44f2-bee3-7fbda300b2cd", "cfa9ae96-e034-4db7-91cb-e58a8392c7bd", "en-EN");
+            var transcriptionResponse = await client.CreateTranscription("373395cc-382b-4a33-b372-cc31f0fdf242", "8dd347a4-11ee-44f2-bee3-7fbda300b2cd", "cfa9ae96-e034-4db7-91cb-e58a8392c7bd", "en-EN");
             restClient.Verify();
 
             Assert.IsNotNull(transcriptionResponse.Data);
@@ -34,7 +35,7 @@ namespace MessageBirdUnitTests.Resources
         }
 
         [TestMethod]
-        public void List()
+        public async Task List()
         {
             var restClient = MockRestClient
                 .ThatReturns(filename: "TranscriptionList.json")
@@ -42,7 +43,7 @@ namespace MessageBirdUnitTests.Resources
                 .Get();
 
             var client = Client.Create(restClient.Object);
-            var transcriptionList = client.ListTranscriptions("373395cc-382b-4a33-b372-cc31f0fdf242", "8dd347a4-11ee-44f2-bee3-7fbda300b2cd", "cfa9ae96-e034-4db7-91cb-e58a8392c7bd", 5, 1);
+            var transcriptionList = await client.ListTranscriptions("373395cc-382b-4a33-b372-cc31f0fdf242", "8dd347a4-11ee-44f2-bee3-7fbda300b2cd", "cfa9ae96-e034-4db7-91cb-e58a8392c7bd", 5, 1);
             restClient.Verify();
 
             Assert.IsNotNull(transcriptionList.Data);
@@ -74,7 +75,7 @@ namespace MessageBirdUnitTests.Resources
         }
 
         [TestMethod]
-        public void View()
+        public async Task View()
         {
             var restClient = MockRestClient
                 .ThatReturns(filename: "TranscriptionView.json")
@@ -83,7 +84,7 @@ namespace MessageBirdUnitTests.Resources
 
             var client = Client.Create(restClient.Object);
 
-            var transcriptionResponse = client.ViewTranscription("373395cc-382b-4a33-b372-cc31f0fdf242", "8dd347a4-11ee-44f2-bee3-7fbda300b2cd", "cfa9ae96-e034-4db7-91cb-e58a8392c7bd", "2ce04c83-ca4f-4d94-8310-02968da41318");
+            var transcriptionResponse = await client.ViewTranscription("373395cc-382b-4a33-b372-cc31f0fdf242", "8dd347a4-11ee-44f2-bee3-7fbda300b2cd", "cfa9ae96-e034-4db7-91cb-e58a8392c7bd", "2ce04c83-ca4f-4d94-8310-02968da41318");
             restClient.Verify();
 
             Assert.IsNotNull(transcriptionResponse.Data);

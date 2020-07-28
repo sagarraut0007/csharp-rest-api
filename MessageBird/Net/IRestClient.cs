@@ -1,4 +1,5 @@
 ﻿using System.IO;
+using System.Threading.Tasks;
 using MessageBird.Net.ProxyConfigurationInjector;
 using MessageBird.Resources;
 
@@ -15,9 +16,9 @@ namespace MessageBird.Net
         string ClientVersion { get; }
         string UserAgent { get; }
 
-        T Create<T> (T resource) where T : Resource;
-        T Retrieve<T>(T resource) where T : Resource;
-        T Update<T>(T resource) where T : Resource;
+        Task<T> Create<T> (T resource) where T : Resource;
+        Task<T> Retrieve<T>(T resource) where T : Resource;
+        Task<T> Update<T>(T resource) where T : Resource;
         void Delete(Resource resource);
 
         string PerformHttpRequest(string method, string uri, string body, HttpStatusCode expectedStatusCode);

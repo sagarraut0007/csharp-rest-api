@@ -2,6 +2,7 @@
 using System.IO;
 using System.Net;
 using System.Text;
+using System.Threading.Tasks;
 using MessageBird.Exceptions;
 using MessageBird.Net.ProxyConfigurationInjector;
 using MessageBird.Resources;
@@ -47,33 +48,33 @@ namespace MessageBird.Net
         /// <summary>
         /// Retrieves a resource with HTTP GET.
         /// </summary>
-        public T Retrieve<T>(T resource) where T : Resource
+        public async Task<T> Retrieve<T>(T resource) where T : Resource
         {
             var uri = GetUriWithQueryString(resource);
 
-            return RequestWithResource("GET", uri, resource, HttpStatusCode.OK);
+            return await RequestWithResource("GET", uri, resource, HttpStatusCode.OK);
         }
 
         /// <summary>
         /// Creates a resource with HTTP POST.
         /// </summary>
-        public T Create<T>(T resource) where T : Resource
+        public async Task<T> Create<T>(T resource) where T : Resource
         {
             var uri = GetUriWithQueryString(resource);
 
-            return RequestWithResource("POST", uri, resource, HttpStatusCode.Created);
+            return await RequestWithResource("POST", uri, resource, HttpStatusCode.Created);
         }
         
         /// <summary>
         /// Updates a resource. HTTP method is determined by
         /// RestClientOptions.UpdateMode.
         /// </summary>
-        public T Update<T>(T resource) where T : Resource
+        public async Task<T> Update<T>(T resource) where T : Resource
         {
             var method = GetUpdateMethod(resource);
             var uri = GetUriWithQueryString(resource);
 
-            return RequestWithResource(method, uri, resource, HttpStatusCode.OK);
+            return await RequestWithResource(method, uri, resource, HttpStatusCode.OK);
         }
 
         /// <summary>
@@ -120,19 +121,20 @@ namespace MessageBird.Net
         /// <summary>
         /// Performs a HTTP request and does any (de)serialization needed.
         /// </summary>
-        private T RequestWithResource<T>(string method, string uri, T resource, HttpStatusCode expectedHttpStatusCode)
+        private async Task<T> RequestWithResource<T>(string method, string uri, T resource, HttpStatusCode expectedHttpStatusCode)
             where T : Resource
         {
             string response;
 
             if (method == "GET" || method == "DELETE")
             {
-                response = PerformHttpRequest(method, uri, expectedHttpStatusCode, baseUrl: resource.BaseUrl);
+                //response = PerformHttpRequest(method, uri, expectedHttpStatusCode, baseUrl: resource.BaseUrl);
+                response = await ProcessHttpRequest<T>(method, uri, null, expectedHttpStatusCode, resource.BaseUrl);
             }
             else
             {
                 string s = resource.Serialize();
-                response = PerformHttpRequest(method, uri, s, expectedHttpStatusCode, baseUrl: resource.BaseUrl);
+                response = await ProcessHttpRequest<T>(method, uri, s, expectedHttpStatusCode, resource.BaseUrl);
             }
 
             resource.Deserialize(response);
@@ -218,6 +220,32 @@ namespace MessageBird.Net
             }
         }
 
+        public async Task<string> ProcessHttpRequest<T>(string method, string uri, string body, HttpStatusCode expectedStatusCode, string baseUrl)
+        {
+            var request = PrepareRequest(method, uri, baseUrl);
+
+            try
+            {
+                if (!string.IsNullOrEmpty(body))
+                {
+                    using (var requestWriter = new StreamWriter(await request.GetRequestStreamAsync()))
+                    {
+                        await requestWriter.WriteAsync(body);
+                    }
+                }
+
+                return await ProcessRequestAsStringAsync(request, expectedStatusCode);
+            }
+            catch (WebException e)
+            {
+                throw ErrorExceptionFromWebException(e);
+            }
+            catch (Exception e)
+            {
+                throw new ErrorException(String.Format("Unhandled exception {0}", e), e);
+            }
+        }
+
         public virtual string PerformHttpRequest(string method, string uri, string body, HttpStatusCode expectedStatusCode, string baseUrl)
         {
             return PerformHttpRequest(method, uri, body, expectedStatusCode, baseUrl, ProcessRequestAsString);
@@ -279,6 +307,25 @@ namespace MessageBird.Net
                     using (var responseReader = new StreamReader(responseStream, encoding))
                     {
                         return responseReader.ReadToEnd();
+                    }
+                }
+                throw new ErrorException(string.Format("Unexpected status code {0}", statusCode));
+            }
+        }
+
+        private async Task<string> ProcessRequestAsStringAsync(HttpWebRequest request, HttpStatusCode expectedStatusCode)
+        {
+            using (var response = await request.GetResponseAsync() as HttpWebResponse)
+            {
+                var statusCode = (HttpStatusCode)response.StatusCode;
+                if (statusCode == expectedStatusCode)
+                {
+                    Stream responseStream = response.GetResponseStream();
+                    Encoding encoding = GetEncoding(response);
+
+                    using (var responseReader = new StreamReader(responseStream, encoding))
+                    {
+                        return await responseReader.ReadToEndAsync();
                     }
                 }
                 throw new ErrorException(string.Format("Unexpected status code {0}", statusCode));

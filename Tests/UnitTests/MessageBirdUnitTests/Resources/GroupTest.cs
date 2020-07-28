@@ -1,5 +1,6 @@
 ﻿using MessageBird;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using System.Threading.Tasks;
 
 namespace MessageBirdUnitTests.Resources
 {
@@ -7,7 +8,7 @@ namespace MessageBirdUnitTests.Resources
     public class GroupTest
     {
         [TestMethod]
-        public void Create()
+        public async Task Create()
         {
             var restClient = MockRestClient
                 .ThatExpects("{\"name\":\"Friends\"}")
@@ -16,7 +17,7 @@ namespace MessageBirdUnitTests.Resources
                 .Get();
             var client = Client.Create(restClient.Object);
 
-            var group = client.CreateGroup("Friends");
+            var group = await client.CreateGroup("Friends");
             restClient.Verify();
 
             Assert.AreEqual("group-id", group.Id);
@@ -37,7 +38,7 @@ namespace MessageBirdUnitTests.Resources
         }
 
         [TestMethod]
-        public void List()
+        public async Task List()
         {
             var restClient = MockRestClient
                 .ThatReturns("{\"offset\": 0,\"limit\": 20,\"count\": 2,\"totalCount\": 2,\"links\": {\"first\": \"https://rest.messagebird.com/groups?offset=0&limit=20\",\"previous\": null,\"next\": null,\"last\": \"https://rest.messagebird.com/groups?offset=0&limit=20\"},\"items\": [{\"id\": \"first-id\",\"href\": \"https://rest.messagebird.com/groups/first-id\",\"name\": \"First\",\"contacts\": {\"totalCount\": 3,\"href\": \"https://rest.messagebird.com/groups/first-id/contacts\"},\"createdDatetime\": \"2018-07-25T11:47:42+00:00\",\"updatedDatetime\": \"2018-07-25T14:03:09+00:00\"},{\"id\": \"second-id\",\"href\": \"https://rest.messagebird.com/groups/second-id\",\"name\": \"Second\",\"contacts\": {\"totalCount\": 4,\"href\": \"https://rest.messagebird.com/groups/second-id/contacts\"},\"createdDatetime\": \"2018-07-25T11:47:39+00:00\",\"updatedDatetime\": \"2018-07-25T14:03:09+00:00\"}]}")
@@ -45,7 +46,7 @@ namespace MessageBirdUnitTests.Resources
                 .Get();
             var client = Client.Create(restClient.Object);
 
-            var groups = client.ListGroups();
+            var groups = await client.ListGroups();
             restClient.Verify();
 
             Assert.AreEqual(2, groups.TotalCount);
@@ -83,7 +84,7 @@ namespace MessageBirdUnitTests.Resources
         }
 
         [TestMethod]
-        public void View()
+        public async Task View()
         {
             var restClient = MockRestClient
                 .ThatReturns("{\"id\": \"group-id\",\"href\": \"https://rest.messagebird.com/groups/group-id\",\"name\": \"Friends\",\"contacts\": {\"totalCount\": 3,\"href\": \"https://rest.messagebird.com/groups/group-id\"},\"createdDatetime\": \"2018-07-25T12:16:10+00:00\",\"updatedDatetime\": \"2018-07-25T12:16:23+00:00\"}")
@@ -91,7 +92,7 @@ namespace MessageBirdUnitTests.Resources
                 .Get();
             var client = Client.Create(restClient.Object);
 
-            var group = client.ViewGroup("group-id");
+            var group = await client.ViewGroup("group-id");
             restClient.Verify();
 
             Assert.AreEqual("group-id", group.Id);

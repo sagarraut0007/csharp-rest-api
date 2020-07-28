@@ -4,6 +4,7 @@ using MessageBird;
 using MessageBird.Resources.Voice;
 using MessageBird.Objects.Voice;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using System.Threading.Tasks;
 
 namespace MessageBirdUnitTests.Resources
 {
@@ -13,7 +14,7 @@ namespace MessageBirdUnitTests.Resources
         private string baseUrl = VoiceBaseResource<CallFlow>.baseUrl;
 
         [TestMethod]
-        public void Create()
+        public async Task Create()
         {
             var restClient = MockRestClient
                 .ThatExpects("{  \"title\": \"Forward call to 31612345678\",  \"record\": true,  \"steps\": [    {      \"options\": {        \"destination\": \"31612345678\"      },      \"action\": \"transfer\"    }  ]}")
@@ -30,7 +31,7 @@ namespace MessageBirdUnitTests.Resources
                 Steps = new List<Step> { new Step { Action = "transfer", Options = new Options { Destination = "31612345678" } } }
             };
 
-            var callFlowResponse = client.CreateCallFlow(newCallFlow);
+            var callFlowResponse = await client.CreateCallFlow(newCallFlow);
             restClient.Verify();
 
             Assert.IsNotNull(callFlowResponse.Data);
@@ -68,7 +69,7 @@ namespace MessageBirdUnitTests.Resources
         }
 
         [TestMethod]
-        public void List()
+        public async Task List()
         {
             var restClient = MockRestClient
                 .ThatReturns(filename: "CallFlowList.json")
@@ -77,7 +78,7 @@ namespace MessageBirdUnitTests.Resources
 
             var client = Client.Create(restClient.Object);
 
-            var callFlowList = client.ListCallFlows();
+            var callFlowList = await client.ListCallFlows();
             restClient.Verify();
 
             Assert.IsNotNull(callFlowList.Data);
@@ -112,7 +113,7 @@ namespace MessageBirdUnitTests.Resources
         }
 
         [TestMethod]
-        public void Update()
+        public async Task Update()
         {
             var restClient = MockRestClient
                 .ThatExpects("{\"id\":\"de3ed163-d5fc-45f4-b8c4-7eea7458c635\",\"title\":\"Updated call flow\",\"steps\":[{\"action\":\"transfer\",\"options\":{\"destination\":\"31611223344\"}}]}")
@@ -128,7 +129,7 @@ namespace MessageBirdUnitTests.Resources
                 Steps = new List<Step> { new Step { Action = "transfer", Options = new Options { Destination = "31611223344" } } }
             };
 
-            var callFlowResponse = client.UpdateCallFlow("de3ed163-d5fc-45f4-b8c4-7eea7458c635", callFlow);
+            var callFlowResponse = await client.UpdateCallFlow("de3ed163-d5fc-45f4-b8c4-7eea7458c635", callFlow);
             restClient.Verify();
 
             Assert.IsNotNull(callFlowResponse.Data);
@@ -152,7 +153,7 @@ namespace MessageBirdUnitTests.Resources
         }
 
         [TestMethod]
-        public void View()
+        public async Task View()
         {
             var restClient = MockRestClient
                 .ThatReturns(filename: "CallFlowView.json")
@@ -161,7 +162,7 @@ namespace MessageBirdUnitTests.Resources
 
             var client = Client.Create(restClient.Object);
 
-            var callFlowResponse = client.ViewCallFlow("de3ed163-d5fc-45f4-b8c4-7eea7458c635");
+            var callFlowResponse = await client.ViewCallFlow("de3ed163-d5fc-45f4-b8c4-7eea7458c635");
             restClient.Verify();
 
             Assert.IsNotNull(callFlowResponse.Data);
